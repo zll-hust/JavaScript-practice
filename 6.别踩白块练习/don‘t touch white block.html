@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>别踩白块</title>
+    <style>
+        #score,
+        h2 {
+            text-align: center;
+            margin: 15px auto;
+        }
+
+        /* 设置容器大小 */
+        #main {
+            width: 400px;
+            height: 400px;
+            /* 设置高度，一个块height为100px，修改这里修改height */
+            background: #ffffff;
+            margin: 0 auto;
+            border: 2px solid #808080;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #con {
+            width: 100%;
+            height: 400px;
+            /*
+             * 所有的往上移动一个大个，方便后面的匀速下落
+             */
+            position: relative;
+            top: -100px;
+            border-collapse: collapse;
+        }
+
+        .row {
+            width: 100%;
+            height: 100px;
+        }
+
+        .cell {
+            width: 100px;
+            height: 100px;
+            float: left;
+        }
+
+        .black {
+            background: #000000;
+        }
+
+        #btns{
+            display: block;
+            margin: 15px auto;
+            width: 209px;
+        }
+
+        button {
+            height: 50px;
+            width: 100px;
+        }
+
+        #level {
+            margin: 15px auto;
+            display: block;
+            text-align: center;
+        }
+    </style>
+    <script>
+        window.onload = function () {
+            var main = document.getElementById("main");
+            var score = document.getElementById("score");
+            var con = document.getElementById('con');
+            var start = document.getElementById('start');
+            var audio = document.getElementById('audio');
+            var reset = document.getElementById('reset');
+            var check_dif = document.getElementById('difficult');
+            var check_indif = document.getElementById('indifficult');
+            var score_gap = 100; //到下一次speedup的分数差
+            var score_per_block = 10; //每个格子的分数
+            var block_per_line = 4;
+            var line_number = 4;
+            var speed = 4;
+            var clock;
+            var difficult; // 难度选择true，点击白块也会失败；false，点击白块不会失败。
+
+            check_dif.checked = false;
+            check_indif.checked = true;
+            difficult = false;
+            reset.disabled = true;
+
+            alert("祝我的ljn小朋友天天开心！！！");
+
+            check_dif.onclick = function(){
+                check_indif.checked = !check_indif.checked;
+                difficult = true;
+            };
+
+            check_indif.onclick = function(){
+                check_dif.checked = !check_dif.checked;
+                difficult = false;
+            };
+
+            // 为主题页面添加判断点击情况
+            main.addEventListener('click', function (event) {
+                if (event.target.className.toString() != "cell black") {
+                    if (!difficult)
+                        pass;
+                    else
+                        fail();
+                } else {
+                    event.target.className = 'cell';
+                    event.target.parentNode.pass = 1; //定义属性pass，表明此行row的黑块已经被点击
+                    changeScore();
+                }
+            }, false);
+
+            reset.addEventListener('click', function (event) {
+                location.reload();
+            }, false);
+
+            start.addEventListener('click', function (event) {
+                clearInterval(clock);
+                //定时器每30s调用一次move();
+                clock = setInterval(move, 30);
+                for (var i = 0; i < line_number; i++) {
+                    createrow();
+                }
+                audio.playbackRate = 0.5;
+                audio.play();
+            }, false);
+
+            function changeScore() {
+                var newscore = parseInt(score.innerHTML) + score_per_block;
+                score.innerHTML = newscore;
+                if (newscore % score_gap == 0) {
+                    speedup();
+                }
+            }
+
+            //加速函数
+            function speedup() {
+                speed += 2;
+                if (speed == 10) {
+                    alert('厉害！加速！');
+                    audio.playbackRate = 1;
+                }
+                if (speed == 20) {
+                    alert('太厉害！（ljn小朋友一定不会玩这么久）');
+                    audio.playbackRate = 2;
+                }
+            }
+
+            //黑块向下移动
+            function move() {
+                var top = parseInt(window.getComputedStyle(con, null)['top']);
+                if (speed + top > 0) {
+                    top = 0;
+                } else {
+                    top += speed;
+                }
+                con.style.top = top + 'px';
+                if (top == 0) {
+                    createrow();
+                    con.style.top = '-100px';
+                    derow();
+                } else if (top == (-100 + speed)) {
+                    var rows = con.childNodes;
+                    if ((rows.length == 5) && (rows[rows.length - 1].pass !== 1)) {
+                        fail();
+                    }
+                }
+            }
+
+            //创建一个<div class="row">并且有四个子节点<div class="cell">
+            function createrow() {
+                var row = creatediv('row'); //创建div className=row
+                var arr = createcell(); //定义div cell的类名，其中一个为cell black
+
+                con.appendChild(row); //添加row为con的子节点
+                for (var i = 0; i < block_per_line; i++) {
+                    row.appendChild(creatediv(arr[i])); //添加row的子节点
+                }
+                if (con.firstChild == null) {
+                    con.appendChild(row);
+                } else {
+                    con.insertBefore(row, con.firstChild);
+                }
+            }
+
+            //创建一个类名的数组，其中一个为cell black，其余为cell
+            function createcell() {
+                var temp = new Array();
+                for (var i = 0; i < block_per_line; i++) {
+                    temp[i] = 'cell';
+                }
+                var i = Math.floor(Math.random() * block_per_line); //随机生成黑块位置
+                temp[i] = 'cell black';
+                return temp;
+            }
+
+            function creatediv(className) {
+                var div = document.createElement('div');
+                div.className = className;
+                return div;
+            }
+
+            //删除div#con的子节点中最后那个<div class='row'>
+            function derow() {
+                if (con.childNodes.length == 6) {
+                    con.removeChild(con.lastChild);
+                }
+            }
+
+            function fail() {
+                clearInterval(clock);
+                confirm('你的最终得分为' + parseInt(score.innerHTML));
+                start.disabled = true;
+                reset.disabled = false;
+                audio.pause();
+            }
+        }
+    </script>
+</head>
+<body>
+<h2>分数</h2>
+<h2 id="score">0</h2>
+<div id="btns">
+<button id="start">开始游戏</button>
+<button id="reset">重新开始</button>
+</div>
+<form id="level">
+    选择游戏难度：
+    <label><input id="difficult" type="radio" value=""/>超大杯（点白块算输） </label>
+    <label><input id="indifficult" type="radio" value=""/>大杯（点白块不会输） </label>
+</form>
+<div id="main">
+    <div id="con"></div>
+</div>
+<audio src="./卡农.mp3" id="audio"></audio>
+</body>
+</html>

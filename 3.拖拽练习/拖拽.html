@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <style>
+        img {
+            position: absolute;
+            width: 360px;
+            height: 260px;
+            border: 2px solid black;
+        }
+    </style>
+
+    <script>
+        window.onload = function () {
+            var imgs = document.getElementsByTagName("img");
+            for (var i = 0; i < imgs.length; i++) {
+                imgs[i].style.left += (imgs[i].width + 10) * i + "px";
+                drag(imgs[i]);
+            }
+        }
+
+        function drag(obj) {
+            obj.onmousedown = function (event) {
+                obj.setCapture && obj.setCapture();
+                event = event || window.event;
+
+                var deltaX = event.clientX - obj.offsetLeft;
+                var deltaY = event.clientY - obj.offsetTop;
+
+                document.onmousemove = function (event) {
+                    event = event || window.event;
+                    var left = event.clientX - deltaX;
+                    var top = event.clientY - deltaY;
+
+                    obj.style.left = left + "px";
+                    obj.style.top = top + "px";
+                };
+
+                obj.onmouseup = function (event) {
+                    //取消document的onmousemove事件
+                    document.onmousemove = null;
+                    //取消document的onmouseup事件
+                    document.onmouseup = null;
+                    //当鼠标松开时，取消对事件的捕获
+                    obj.releaseCapture && obj.releaseCapture();
+                }
+
+                return false;
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <img src="./img/1.jpg" alt="">
+    <img src="./img/2.jpg" alt="">
+    <img src="./img/3.jpg" alt="">
+</body>
+
+</html>

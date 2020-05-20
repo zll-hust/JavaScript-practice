@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            color: #ffffff;
+            font-size: 20px;
+            font-family: "微软雅黑";
+        }
+
+        body {
+            background: #00a0fc;
+            overflow: hidden;
+        }
+    </style>
+
+    <script>
+        window.onload = function () {
+            var PageX = window.screen.width,
+                PageY = window.screen.height,
+                aSnow = [];
+            setInterval(createSnow, 500);
+            setInterval(moveSnow, 10);
+
+            function snow(x, y, xspeed, yspeed, xsin, size) {
+                this.node = document.createElement('div');
+                this.x = x;
+                this.y = y;
+                this.xspeed = xspeed;
+                this.yspeed = yspeed;
+                this.size = size;
+                this.createSnow = function () {
+                    this.node.style.position = 'absolute';
+                    this.node.style.top = this.y + 'px';
+                    this.node.style.left = this.x + 'px';
+                    this.node.innerHTML = '*';
+                    this.node.style.color = "#fff";
+                    document.body.appendChild(this.node);
+                };
+                this.createSnow();
+                this.snowMove = function () {
+                    //垂直方向移动
+                    this.node.style.top = parseInt(this.node.style.top) + this.yspeed + 'px';
+                    //水平方向
+                    this.node.style.left = parseInt(this.node.style.left) + this.xsin * Math.sin(this
+                        .xspeed) + "px";
+                    this.node.style.fontSize = this.size + 'px';
+                };
+            }
+
+            function createSnow() {
+                aSnow.push(new snow(Math.random() * PageX, -50, 0.02 + Math.random() / 10, 1 + Math.random(),
+                    Math.random() * 30, 20 + Math.random() * 30));
+            }
+
+            function moveSnow() {
+                var j;
+                for (j = 0; j < aSnow.length; j++) {
+                    aSnow[j].snowMove();
+                    if (parseInt(aSnow[j].node.style.top) > PageY || parseInt(aSnow[j].node.style.left) >
+                        PageX) {
+                        aSnow[j].node.parentNode.removeChild(aSnow[j].node);
+                        aSnow.splice(j, 1);
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body>
+
+</body>
+
+</html>
